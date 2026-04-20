@@ -1,0 +1,23 @@
+[package]
+name = "webarkit-nft-forge-rs"
+version = "0.1.0"
+edition = "2024"
+description = "High-performance NFT Marker Creator for WebARKit - Rust edition"
+readme = "README.md"
+keywords = ["webar", "nft", "marker", "ar"]
+categories = ["graphics", "multimedia"]
+license = "LGPL-3.0-or-later"
+
+[lib]
+name = "webarkit_nft_forge_rs"
+path = "src/lib.rs"
+
+[[bin]]
+name = "webarkit-nft-forge-rs"
+path = "src/main.rs"
+
+[dependencies]
+eframe = "0.34.1"
+egui_extras = {version = "0.34.1" , features = ["default", "all_loaders"]}
+image = { version = "0.25", features = ["jpeg", "png"] }
+webarkitlib-rs = "0.3.2"
