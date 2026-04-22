@@ -23,6 +23,10 @@ fn main() -> eframe::Result {
 struct MyApp {
     texture: Option<egui::TextureHandle>,
     image_bytes: Vec<u8>,
+    image_pixels: Vec<u8>,
+    image_width: i32,
+    image_height: i32,
+    image_nc: i32,
     button_color: egui::Color32,
     button_text: egui::WidgetText,
     button_text_color: egui::Color32,
@@ -42,7 +46,12 @@ impl eframe::App for MyApp {
             self.button_text = egui::WidgetText::from("Generate").color(self.button_text_color); // Change button text based on transformations
 
             let rgba = img.to_rgba8();
+            let rgb = img.to_rgb8();
             self.image_bytes = rgba.as_raw().to_vec();
+            self.image_height = rgb.height() as i32;
+            self.image_width = rgb.width() as i32;
+            self.image_nc = 3;
+            self.image_pixels = rgb.into_raw();
             let size = [rgba.width() as usize, rgba.height() as usize];
             self.texture = Some(ui.ctx().load_texture(
                 "pinball",
@@ -73,9 +82,21 @@ impl eframe::App for MyApp {
                                 )
                                 .clicked()
                             {
-                                match generate_nft_marker(&self.image_bytes) {
-                                    Ok(marker_data) => {
-                                        println!("NFT marker generated: {} bytes", marker_data.len())
+                                println!("NFT marker start to generate...");
+                                match generate_nft_marker(
+                                    &self.image_pixels,
+                                    self.image_width,
+                                    self.image_height,
+                                    self.image_nc,
+                                ) {
+                                    Ok(_marker_data) => {
+                                        println!("NFT marker generated");
+                                        //println!("NFT marker generated: {} bytes", marker_data.len());
+                                        /*if let Err(e) = fs::write("marker.iset", 0) {
+                                            eprintln!("Failed to write marker file: {}", e);
+                                        } else {
+                                            println!("NFT marker file 'marker.iset' created successfully.");
+                                        }*/
                                     }
                                     Err(e) => eprintln!("Generation error: {}", e),
                                 }
