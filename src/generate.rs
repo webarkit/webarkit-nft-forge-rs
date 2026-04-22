@@ -1,4 +1,3 @@
-use std::io::Cursor;
 use webarkitlib_rs::ar2::{ar2_gen_feature_map, ar2_gen_image_set};
 
 #[cfg(feature = "ffi-backend")]
@@ -96,9 +95,8 @@ pub fn generate_nft_marker(
         if let Some(ref_data) = combined {
             let total_kpm = ref_data.num as usize;
             //let save_start = Instant::now();
-            ref_data.save(&fset3_path).unwrap_or_else(|e| {
-                //eprintln!("Error: failed to save {:?}: {}", fset3_path, e);
-                eprintln!("Error: failed to save {:?}: {}", "there", e);
+            ref_data.save(std::path::Path::new("pinball.fset3")).unwrap_or_else(|e| {
+                eprintln!("Error: failed to save {:?}: {}", "pinball.fset3", e);
                 std::process::exit(1);
             });
             //let save_elapsed = save_start.elapsed().as_secs_f64();
