@@ -13,17 +13,17 @@ This project is a **Rust implementation** of a high-performance **NFT Marker Cre
 - 🖥️ A standalone **desktop application binary**
 - 📦 A **reusable Rust library**
 
-## Prerequisites
+## 📋 Prerequisites
 
 This project uses a C++ back-end (via `webarkitlib-rs`) for feature extraction. To build it, you need:
 
-- **Rust**: Latest stable version.
-- **C++ Toolchain**: A C++17 compatible compiler (MSVC on Windows, Clang/GCC on macOS/Linux).
-- **CMake**: Required for building the FFI bindings.
+- 🦀 **Rust**: Latest stable version.
+- ⚙️ **C++ Toolchain**: A C++17 compatible compiler (MSVC on Windows, Clang/GCC on macOS/Linux).
+- 🛠️ **CMake**: Required for building the FFI bindings.
 
-## Installation
+## 💻 Installation
 
-### Build instructions
+### 🔨 Build instructions
 
 1. Clone the repository:
    ```bash
@@ -49,24 +49,24 @@ This project uses a C++ back-end (via `webarkitlib-rs`) for feature extraction. 
    cargo run --release --features ffi-backend,simd,log-helpers
    ```
 
-## Usage
+## 🕹️ Usage
 
-### GUI Application
+### 🖼️ GUI Application
 
 The application provides a user-friendly interface for generating NFT markers:
 
-1. **Select Image**: Click "📁 Select Image" to choose a source JPG or PNG file.
-2. **Output Directory**: Optionally select where to save the markers. Defaults to the current directory.
-3. **Marker Name**: Provide a semantic name for your marker files.
-4. **DPI Setting**: Use the slider to set the source image DPI (default 72, range 72-600).
-5. **Generate**: Click "🚀 Generate Marker". The process runs in the background, and you can monitor progress via the status bar.
+1. 🖼️ **Select Image**: Click "📁 Select Image" to choose a source JPG or PNG file.
+2. 📁 **Output Directory**: Optionally select where to save the markers. Defaults to the current directory.
+3. 🏷️ **Marker Name**: Provide a semantic name for your marker files.
+4. 🎚️ **DPI Setting**: Use the slider to set the source image DPI (default 72, range 72-600).
+5. 🚀 **Generate**: Click "🚀 Generate Marker". The process runs in the background, and you can monitor progress via the status bar.
 
 The tool generates three files per marker:
-- `.iset`: Image set metadata.
-- `.fset`: Feature set data.
-- `.fset3`: KPM/FREAK feature data (required for NFT).
+- 📄 `.iset`: Image set metadata.
+- 📉 `.fset`: Feature set data.
+- 🧩 `.fset3`: KPM/FREAK feature data (required for NFT).
 
-### Library
+### 📚 Library
 
 You can also use the core functionality as a library in your own Rust projects:
 
@@ -93,6 +93,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-## License
+## ⚖️ License
 
 This project is licensed under the [LGPL-3.0-or-later](LICENSE).
