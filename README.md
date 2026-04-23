@@ -1,10 +1,17 @@
-# WebARKit nft forge - Rust edition
-This project is a Rust implementation of a high-performance NFT Marker Creator for WebARKit. It provides tools to generate NFT markers that can be used in augmented reality applications built with WebARKit. It can generate NFT markers from images and export them in a format compatible with a wide range of AR frameworks, based on WebARKitLib, ARtoolKit5, ARToolKitX including ARnft, JsartoolkitNFT, Jsartoolkit5, and AR.js, allowing developers to easily integrate AR experiences into their web applications. It is in active development and it depends on the webarkitlib-rs crate for core NFT marker generation functionality. The project also includes a GUI built with eframe and egui_extras for user-friendly interaction. The application is designed to be cross-platform, running on Windows, macOS, and Linux.
+# 🛠️ WebARKit NFT Forge - Rust Edition
 
-The package now ships both as:
+This project is a **Rust implementation** of a high-performance **NFT Marker Creator** for WebARKit. It provides powerful tools to generate Natural Feature Tracking (NFT) markers that can be used in augmented reality applications.
 
-- a desktop application binary
-- a reusable Rust library
+✨ **Key Features:**
+- **Universal Compatibility**: Generates NFT markers from images and exports them in a format compatible with a wide range of AR frameworks based on **WebARKitLib**, **ARtoolKit5**, and **ARToolKitX** (including *ARnft*, *JsartoolkitNFT*, *Jsartoolkit5*, and *AR.js*).
+- **Core Reliability**: Built on top of the robust [`webarkitlib-rs`](https://github.com/webarkit/WebARKitLib-rs) crate for reliable core marker generation functionality.
+- **Friendly GUI**: Includes an intuitive graphical interface built with `eframe` and `egui_extras` for user-friendly interaction.
+- **Cross-Platform**: Designed to run seamlessly on **Windows**, **macOS**, and **Linux**.
+
+🚀 The package now ships both as:
+
+- 🖥️ A standalone **desktop application binary**
+- 📦 A **reusable Rust library**
 
 ## Prerequisites
 
