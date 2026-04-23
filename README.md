@@ -24,14 +24,22 @@ This project uses a C++ back-end (via `webarkitlib-rs`) for feature extraction. 
    cd webarkit-nft-forge-rs
    ```
 
-2. Build the project using Cargo with the `ffi-backend` feature:
+2. Build the project using Cargo. You can use the `ffi-backend` feature for C++ marker generation:
    ```bash
    cargo build --release --features ffi-backend
+   ```
+   *Optional features:* You can also enable SIMD optimizations and logging helpers by passing additional features:
+   ```bash
+   cargo build --release --features ffi-backend,simd,log-helpers
    ```
 
 3. Run the application:
    ```bash
    cargo run --release --features ffi-backend
+   ```
+   Or with all features:
+   ```bash
+   cargo run --release --features ffi-backend,simd,log-helpers
    ```
 
 ## Usage
