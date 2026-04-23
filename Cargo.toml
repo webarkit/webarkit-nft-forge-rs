@@ -20,7 +20,8 @@ path = "src/main.rs"
 eframe = "0.34.1"
 egui_extras = {version = "0.34.1" , features = ["default", "all_loaders"]}
 image = { version = "0.25", features = ["jpeg", "png"] }
-webarkitlib-rs = {  version= "0.3.3", features = ["ffi-backend"] }
+rfd = "0.15"
+webarkitlib-rs = { git = "https://github.com/webarkit/WebARKitLib-rs.git", branch = "fix/issue-72-ffi-backend-vendoring", features = ["ffi-backend"] }
 
 [features]
 ffi-backend = []

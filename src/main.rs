@@ -1,6 +1,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
 use eframe::egui::{self};
+use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::Arc;
 use webarkit_nft_forge_rs::generate_nft_marker;
 
 fn main() -> eframe::Result {
@@ -19,92 +21,201 @@ fn main() -> eframe::Result {
     )
 }
 
-#[derive(Default)]
 struct MyApp {
     texture: Option<egui::TextureHandle>,
-    image_bytes: Vec<u8>,
     image_pixels: Vec<u8>,
     image_width: i32,
     image_height: i32,
     image_nc: i32,
-    button_color: egui::Color32,
-    button_text: egui::WidgetText,
-    button_text_color: egui::Color32,
+    image_path: Option<std::path::PathBuf>,
+    output_dir: Option<std::path::PathBuf>,
+    marker_name: String,
+    dpi: f32,
+    status_message: String,
+    progress_val: Arc<AtomicU32>,
+    is_generating: bool,
+    result_rx: Option<std::sync::mpsc::Receiver<Result<(), String>>>,
+}
+
+impl Default for MyApp {
+    fn default() -> Self {
+        Self {
+            texture: None,
+            image_pixels: Vec::new(),
+            image_width: 0,
+            image_height: 0,
+            image_nc: 3,
+            image_path: None,
+            output_dir: None,
+            marker_name: "marker".to_string(),
+            dpi: 220.0,
+            status_message: "Ready".to_string(),
+            progress_val: Arc::new(AtomicU32::new(0)),
+            is_generating: false,
+            result_rx: None,
+        }
+    }
 }
 
 impl eframe::App for MyApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
-        // Load the image once via the `image` crate so you can apply transformations
-        if self.texture.is_none() {
-            let img = image::load_from_memory(include_bytes!("pinball.jpg")).unwrap();
+        let ctx = ui.ctx().clone();
 
-            // Apply transformations here, for example:
-            let img = img.resize(720, 400, image::imageops::FilterType::Lanczos3);
+        // Check for results from the background thread
+        if let Some(rx) = &self.result_rx {
+            if let Ok(res) = rx.try_recv() {
+                self.is_generating = false;
+                match res {
+                    Ok(_) => {
+                        self.status_message = "Success! Marker generated.".to_string();
+                        self.progress_val.store(100, Ordering::SeqCst);
+                    }
+                    Err(e) => {
+                        self.status_message = format!("Error: {}", e);
+                    }
+                }
+                self.result_rx = None;
+            }
+        }
 
-            self.button_color = egui::Color32::from_rgb(220, 50, 10); // Change button color based on transformations
-            self.button_text_color = egui::Color32::WHITE; // Change button text color based on transformations
-            self.button_text = egui::WidgetText::from("Generate").color(self.button_text_color); // Change button text based on transformations
+        if self.is_generating {
+            ctx.request_repaint();
+        }
 
-            let rgba = img.to_rgba8();
+        egui::Panel::left("controls_panel").show_inside(ui, |ui| {
+            ui.add_enabled_ui(!self.is_generating, |ui| {
+                ui.heading("Marker Settings");
+                ui.add_space(10.0);
+
+                if ui.button("📁 Select Image").clicked() {
+                    if let Some(path) = rfd::FileDialog::new()
+                        .add_filter("Image Files", &["jpg", "jpeg", "png"])
+                        .pick_file()
+                    {
+                        self.image_path = Some(path.clone());
+                        self.status_message = format!("Selected image: {:?}", path.file_name().unwrap());
+                        self.load_image_preview(&ctx, &path);
+                    }
+                }
+
+                if let Some(path) = &self.image_path {
+                    ui.label(format!("File: {}", path.display()));
+                }
+
+                ui.separator();
+
+                if ui.button("📂 Output Directory").clicked() {
+                    if let Some(path) = rfd::FileDialog::new().pick_folder() {
+                        self.output_dir = Some(path);
+                    }
+                }
+
+                if let Some(path) = &self.output_dir {
+                    ui.label(format!("Save to: {}", path.display()));
+                } else {
+                    ui.label("Save to: Current Directory");
+                }
+
+                ui.separator();
+
+                ui.horizontal(|ui| {
+                    ui.label("Marker Name:");
+                    ui.text_edit_singleline(&mut self.marker_name);
+                });
+
+                ui.horizontal(|ui| {
+                    ui.label("DPI:");
+                    ui.add(egui::Slider::new(&mut self.dpi, 72.0..=600.0));
+                });
+
+                ui.separator();
+
+                ui.add_space(10.0);
+
+                let can_generate = self.image_path.is_some() && !self.marker_name.is_empty();
+                let button = egui::Button::new(egui::WidgetText::from("🚀 Generate Marker").heading())
+                    .fill(egui::Color32::from_rgb(0, 150, 255))
+                    .corner_radius(8.0);
+
+                if ui.add_enabled(can_generate, button).clicked() {
+                    self.is_generating = true;
+                    self.status_message = "Generating...".to_string();
+                    self.progress_val.store(0, Ordering::SeqCst);
+
+                    let output_dir = self
+                        .output_dir
+                        .clone()
+                        .unwrap_or_else(|| std::env::current_dir().unwrap());
+                    let marker_name = self.marker_name.clone();
+                    let dpi = self.dpi;
+                    let pixels = self.image_pixels.clone();
+                    let width = self.image_width;
+                    let height = self.image_height;
+                    let nc = self.image_nc;
+                    let progress = self.progress_val.clone();
+
+                    let (tx, rx) = std::sync::mpsc::channel();
+                    self.result_rx = Some(rx);
+
+                    std::thread::spawn(move || {
+                        let res = generate_nft_marker(
+                            &pixels,
+                            width,
+                            height,
+                            nc,
+                            &output_dir,
+                            &marker_name,
+                            dpi,
+                            Some(progress),
+                        );
+                        let _ = tx.send(res.map_err(|e| e.to_string()));
+                    });
+                }
+            });
+
+            ui.add_space(20.0);
+            
+            let progress = self.progress_val.load(Ordering::SeqCst) as f32 / 100.0;
+            ui.add(egui::ProgressBar::new(progress).text(format!("{}%", (progress * 100.0) as u32)));
+            
+            ui.add_space(10.0);
+            ui.label(&self.status_message);
+        });
+
+        egui::CentralPanel::default().show_inside(ui, |ui| {
+            ui.vertical_centered(|ui| {
+                ui.heading("Image Preview");
+                ui.add_space(10.0);
+                if let Some(texture) = &self.texture {
+                    let max_size = ui.available_size();
+                    ui.add(egui::Image::new(texture).max_size(max_size).corner_radius(8.0));
+                } else {
+                    ui.add_space(100.0);
+                    ui.label(egui::WidgetText::from("No image selected").italics().color(egui::Color32::GRAY));
+                }
+            });
+        });
+    }
+}
+
+impl MyApp {
+    fn load_image_preview(&mut self, ctx: &egui::Context, path: &std::path::Path) {
+        if let Ok(img) = image::open(path) {
             let rgb = img.to_rgb8();
-            self.image_bytes = rgba.as_raw().to_vec();
-            self.image_height = rgb.height() as i32;
             self.image_width = rgb.width() as i32;
+            self.image_height = rgb.height() as i32;
             self.image_nc = 3;
             self.image_pixels = rgb.into_raw();
+
+            let rgba = img.to_rgba8();
             let size = [rgba.width() as usize, rgba.height() as usize];
-            self.texture = Some(ui.ctx().load_texture(
-                "pinball",
+            self.texture = Some(ctx.load_texture(
+                "preview",
                 egui::ColorImage::from_rgba_unmultiplied(size, rgba.as_raw()),
                 Default::default(),
             ));
+        } else {
+            self.status_message = "Failed to load image".to_string();
         }
-
-        egui::CentralPanel::default().show_inside(ui, |ui| {
-            egui::ScrollArea::both().show(ui, |ui| {
-                ui.vertical_centered(|ui| {
-                    ui.heading("Generate a pinball NFT marker");
-                    ui.add_space(4.0);
-                    if let Some(texture) = &self.texture {
-                        ui.add(egui::Image::new(texture))
-                            .on_hover_text_at_pointer("Transformed image");
-                        ui.add_space(4.0);
-
-                        ui.scope(|ui| {
-                            ui.spacing_mut().button_padding = egui::vec2(12.0, 8.0);
-
-                            if ui
-                                .add(
-                                    egui::Button::new(self.button_text.clone())
-                                        .fill(self.button_color)
-                                        .corner_radius(4.0)
-                                        .gap(4.0),
-                                )
-                                .clicked()
-                            {
-                                println!("NFT marker start to generate...");
-                                match generate_nft_marker(
-                                    &self.image_pixels,
-                                    self.image_width,
-                                    self.image_height,
-                                    self.image_nc,
-                                ) {
-                                    Ok(_marker_data) => {
-                                        println!("NFT marker generated");
-                                        //println!("NFT marker generated: {} bytes", marker_data.len());
-                                        /*if let Err(e) = fs::write("marker.iset", 0) {
-                                            eprintln!("Failed to write marker file: {}", e);
-                                        } else {
-                                            println!("NFT marker file 'marker.iset' created successfully.");
-                                        }*/
-                                    }
-                                    Err(e) => eprintln!("Generation error: {}", e),
-                                }
-                            }
-                        });
-                    }
-                });
-            });
-        });
     }
 }
