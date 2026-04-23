@@ -21,7 +21,10 @@ eframe = "0.34.1"
 egui_extras = {version = "0.34.1" , features = ["default", "all_loaders"]}
 image = { version = "0.25", features = ["jpeg", "png"] }
 rfd = "0.15"
-webarkitlib-rs = { version = "0.3.7", features = ["ffi-backend"] }
+webarkitlib-rs = { version = "0.3.7", default-features = false }
 
 [features]
-ffi-backend = []
+default = []
+ffi-backend = ["webarkitlib-rs/ffi-backend"]
+simd = ["webarkitlib-rs/simd"]
+log-helpers = ["webarkitlib-rs/log-helpers"]

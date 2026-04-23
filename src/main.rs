@@ -5,6 +5,8 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
 use webarkit_nft_forge_rs::generate_nft_marker;
 
+/// The main entry point for the WebARKit NFT Forge application.
+/// It configures the eframe native options and starts the application.
 fn main() -> eframe::Result {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default().with_inner_size([720.0, 720.0]),
@@ -21,6 +23,8 @@ fn main() -> eframe::Result {
     )
 }
 
+/// The application state for the WebARKit NFT Forge GUI.
+/// Maintains UI state, configuration, and image generation progress.
 struct MyApp {
     texture: Option<egui::TextureHandle>,
     image_pixels: Vec<u8>,
@@ -199,6 +203,8 @@ impl eframe::App for MyApp {
 }
 
 impl MyApp {
+    /// Loads the selected image, extracts pixels for generating the marker,
+    /// and creates a preview texture to display in the UI.
     fn load_image_preview(&mut self, ctx: &egui::Context, path: &std::path::Path) {
         if let Ok(img) = image::open(path) {
             let rgb = img.to_rgb8();

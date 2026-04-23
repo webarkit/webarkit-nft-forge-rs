@@ -6,6 +6,24 @@ use webarkitlib_rs::ar2::{ar2_gen_feature_map, ar2_gen_image_set};
 const KPM_SURF_FEATURE_DENSITY: i32 = 100;
 
 /// Generate a WebARKit-compatible NFT marker payload from image bytes.
+///
+/// This function coordinates the generation of image sets (`.iset`) and feature sets (`.fset`, `.fset3`) 
+/// which are required for NFT tracking in WebARKit.
+///
+/// # Arguments
+///
+/// * `image_data` - Raw RGB byte slice of the source image.
+/// * `image_width` - Width of the image in pixels.
+/// * `image_height` - Height of the image in pixels.
+/// * `image_nc` - Number of channels (usually 3 for RGB).
+/// * `output_dir` - Directory where the generated marker files will be saved.
+/// * `marker_name` - Base name of the marker. The generated files will use this name.
+/// * `dpi` - DPI (Dots Per Inch) value of the source image.
+/// * `progress` - Optional `AtomicU32` wrapped in an `Arc` to report progress updates (0-100%).
+///
+/// # Errors
+/// 
+/// Returns an error if generating the image set, feature map, or FREAK features fail.
 pub fn generate_nft_marker(
     image_data: &[u8],
     image_width: i32,
