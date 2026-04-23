@@ -6,47 +6,78 @@ The package now ships both as:
 - a desktop application binary
 - a reusable Rust library
 
+## Prerequisites
+
+This project uses a C++ back-end (via `webarkitlib-rs`) for feature extraction. To build it, you need:
+
+- **Rust**: Latest stable version.
+- **C++ Toolchain**: A C++17 compatible compiler (MSVC on Windows, Clang/GCC on macOS/Linux).
+- **CMake**: Required for building the FFI bindings.
+
 ## Installation
 
 ### Build instructions
+
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/webarkit/webarkit-nft-forge-rs.git
    cd webarkit-nft-forge-rs
    ```
-2. Build the project using Cargo:
+
+2. Build the project using Cargo with the `ffi-backend` feature:
    ```bash
-   cargo build --release
-   ``` 
+   cargo build --release --features ffi-backend
+   ```
+
 3. Run the application:
    ```bash
-   ./target/release/webarkit-nft-forge-rs
-    ```
+   cargo run --release --features ffi-backend
+   ```
 
 ## Usage
 
-### Application
+### GUI Application
 
-1. Launch the application.  
-2. Use the GUI to select an image file that you want to convert into an NFT marker.
-3. Click the "Generate" button to create the NFT marker.
-4. The generated NFT marker will be created by the application, and you can save it to your desired location.
+The application provides a user-friendly interface for generating NFT markers:
+
+1. **Select Image**: Click "📁 Select Image" to choose a source JPG or PNG file.
+2. **Output Directory**: Optionally select where to save the markers. Defaults to the current directory.
+3. **Marker Name**: Provide a semantic name for your marker files.
+4. **DPI Setting**: Use the slider to set the source image DPI (default 72, range 72-600).
+5. **Generate**: Click "🚀 Generate Marker". The process runs in the background, and you can monitor progress via the status bar.
+
+The tool generates three files per marker:
+- `.iset`: Image set metadata.
+- `.fset`: Feature set data.
+- `.fset3`: KPM/FREAK feature data (required for NFT).
 
 ### Library
 
-Use the crate from Rust code by calling the exported API:
+You can also use the core functionality as a library in your own Rust projects:
 
 ```rust
+use std::sync::Arc;
+use std::sync::atomic::AtomicU32;
 use webarkit_nft_forge_rs::generate_nft_marker;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-   let image_data = std::fs::read("marker.jpg")?;
-   let marker = generate_nft_marker(&image_data)?;
-   println!("Generated {} bytes", marker.len());
-   Ok(())
+    let image_data = std::fs::read("input.jpg")?;
+    let output_dir = std::path::Path::new("./output");
+    let progress = Arc::new(AtomicU32::new(0));
+
+    generate_nft_marker(
+        &image_data,
+        1920, 1080, 3, // width, height, channels
+        output_dir,
+        "my_marker",
+        72.0, // DPI
+        Some(progress)
+    )?;
+    
+    Ok(())
 }
 ```
 
-## Publishing notes
+## License
 
-This package is structured to publish as both a library crate and a binary crate. Before publishing to crates.io, add a valid `license` or `license-file` entry to `Cargo.toml`.
+This project is licensed under the [LGPL-3.0-or-later](LICENSE).

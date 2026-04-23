@@ -4903,9 +4903,9 @@ dependencies = [
 
 [[package]]
 name = "webarkitlib-rs"
-version = "0.3.4"
+version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0464123830041a11af03bb4b8d6b5b42f18c28d66db960ecced1bce520ef6da4"
+checksum = "ef2f58373647fa629deeb109f33673779f4219566df9ae424ce41aaf6d3bcd57"
 dependencies = [
  "bindgen",
  "byteorder",
