@@ -5,6 +5,30 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Arc;
 use webarkit_nft_forge_rs::generate_nft_marker;
 
+/// Helper to load Noto Monochrome Emoji font as fallback for egui
+fn setup_custom_fonts(ctx: &egui::Context) {
+    let mut fonts = egui::FontDefinitions::default();
+
+    // Load the emoji font data from assets/fonts/NotoEmoji-Regular.ttf
+    fonts.font_data.insert(
+        "noto_emoji".to_owned(),
+        egui::FontData::from_static(include_bytes!("assets/fonts/NotoEmoji-Regular.ttf")).into(),
+    );
+
+    // Append to Proportional and Monospace families as fallback
+    fonts.families
+        .entry(egui::FontFamily::Proportional)
+        .or_default()
+        .push("noto_emoji".to_owned());
+
+    fonts.families
+        .entry(egui::FontFamily::Monospace)
+        .or_default()
+        .push("noto_emoji".to_owned());
+
+    ctx.set_fonts(fonts);
+}
+
 /// The main entry point for the WebARKit NFT Forge application.
 /// It configures the eframe native options and starts the application.
 fn main() -> eframe::Result {
@@ -16,6 +40,8 @@ fn main() -> eframe::Result {
         "WebARKit NFT Forge App",
         options,
         Box::new(|cc| {
+            // Load custom fallback font for emojis
+            setup_custom_fonts(&cc.egui_ctx);
             // This gives us image support:
             egui_extras::install_image_loaders(&cc.egui_ctx);
             Ok(Box::<MyApp>::default())
@@ -85,6 +111,14 @@ impl eframe::App for MyApp {
         if self.is_generating {
             ctx.request_repaint();
         }
+
+        egui::Panel::bottom("footer_panel").show_inside(ui, |ui| {
+            ui.vertical_centered(|ui| {
+                ui.add_space(4.0);
+                ui.label(egui::RichText::new("Proudly made with Rust 🦀").italics().color(ui.visuals().weak_text_color()));
+                ui.add_space(4.0);
+            });
+        });
 
         egui::Panel::left("controls_panel").show_inside(ui, |ui| {
             ui.add_enabled_ui(!self.is_generating, |ui| {

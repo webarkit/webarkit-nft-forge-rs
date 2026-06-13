@@ -1,6 +1,6 @@
 # 🛠️ WebARKit NFT Forge - Rust Edition
 
-This project is a **Rust implementation** of a high-performance **NFT Marker Creator** for WebARKit. It provides powerful tools to generate Natural Feature Tracking (NFT) markers that can be used in augmented reality applications.
+This project is a **pure Rust implementation** (with optional legacy C++ FFI fallback) of a high-performance **NFT Marker Creator** for WebARKit. It provides powerful tools to generate Natural Feature Tracking (NFT) markers that can be used in augmented reality applications.
 
 ✨ **Key Features:**
 - **Universal Compatibility**: Generates NFT markers from images and exports them in a format compatible with a wide range of AR frameworks based on **WebARKitLib**, **ARtoolKit5**, and **ARToolKitX** (including *ARnft*, *JsartoolkitNFT*, *Jsartoolkit5*, and *AR.js*).
@@ -15,9 +15,11 @@ This project is a **Rust implementation** of a high-performance **NFT Marker Cre
 
 ## 📋 Prerequisites
 
-This project uses a C++ back-end (via `webarkitlib-rs`) for feature extraction. To build it, you need:
+By default, the project compiles and runs in **pure Rust** and only requires:
 
 - 🦀 **Rust**: Latest stable version.
+
+If you explicitly want to use the legacy C++ backend (via the `ffi-backend` feature), you will also need:
 - ⚙️ **C++ Toolchain**: A C++17 compatible compiler (MSVC on Windows, Clang/GCC on macOS/Linux).
 - 🛠️ **CMake**: Required for building the FFI bindings.
 
@@ -31,22 +33,28 @@ This project uses a C++ back-end (via `webarkitlib-rs`) for feature extraction. 
    cd webarkit-nft-forge-rs
    ```
 
-2. Build the project using Cargo. You can use the `ffi-backend` feature for C++ marker generation:
+2. Build the project using Cargo. By default, this builds the **pure Rust** KPM feature extractor:
+   ```bash
+   cargo build --release
+   ```
+
+   *Legacy FFI Backend:* If you wish to build with the C++ FFI backend instead:
    ```bash
    cargo build --release --features ffi-backend
    ```
-   *Optional features:* You can also enable SIMD optimizations and logging helpers by passing additional features:
+
+   *Optional features:* You can also enable SIMD optimizations and logging helpers:
    ```bash
-   cargo build --release --features ffi-backend,simd,log-helpers
+   cargo build --release --features simd,log-helpers
    ```
 
 3. Run the application:
    ```bash
-   cargo run --release --features ffi-backend
+   cargo run --release
    ```
-   Or with all features:
+   Or with the legacy FFI backend:
    ```bash
-   cargo run --release --features ffi-backend,simd,log-helpers
+   cargo run --release --features ffi-backend
    ```
 
 ## 🕹️ Usage
