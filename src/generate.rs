@@ -2,7 +2,6 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicU32, Ordering};
 use webarkitlib_rs::ar2::{ar2_gen_feature_map, ar2_gen_image_set};
 
-#[cfg(feature = "ffi-backend")]
 const KPM_SURF_FEATURE_DENSITY: i32 = 100;
 
 /// Generate a WebARKit-compatible NFT marker payload from image bytes.
@@ -61,10 +60,9 @@ pub fn generate_nft_marker(
     feature_set
         .save(fset_path.to_str().ok_or("Invalid output path")?)
         .map_err(|e| format!("failed to save {:?}: {}", fset_path, e))?;
-    #[cfg(feature = "ffi-backend")]
     {
         use webarkitlib_rs::kpm::types::KpmRefDataSet;
-        use webarkitlib_rs::kpm::{CppFreakMatcher, KpmCompMode, KpmError, KpmProcMode};
+        use webarkitlib_rs::kpm::{RustFreakMatcher, KpmCompMode, KpmError, KpmProcMode};
 
         println!("Generating FeatureSet3...");
 
@@ -80,8 +78,8 @@ pub fn generate_nft_marker(
             let max_feat = KPM_SURF_FEATURE_DENSITY * scale.xsize * scale.ysize / (480 * 360);
 
             // Fresh matcher for each scale (scales may have different dimensions).
-            let mut matcher = CppFreakMatcher::new(scale.xsize, scale.ysize).map_err(|e| {
-                format!("CppFreakMatcher::new failed: {:?}", e)
+            let mut matcher = RustFreakMatcher::new(scale.xsize, scale.ysize).map_err(|e| {
+                format!("RustFreakMatcher::new failed: {:?}", e)
             })?;
 
             let result = KpmRefDataSet::generate(
@@ -149,3 +147,54 @@ pub fn generate_nft_marker(
     set_progress(100);
     Ok(ret)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::Path;
+
+    #[test]
+    fn test_generate_nft_marker_integration() {
+        let img_path = Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/src/pinball.jpg"));
+        assert!(img_path.exists(), "pinball.jpg should exist at src/pinball.jpg");
+
+        // Load image using the image crate
+        let img = image::open(img_path).expect("Failed to open pinball.jpg");
+        let rgb = img.to_rgb8();
+        let width = rgb.width() as i32;
+        let height = rgb.height() as i32;
+        let pixels = rgb.into_raw();
+
+        let temp_dir = std::env::temp_dir().join(format!("nft_forge_test_{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs()));
+        std::fs::create_dir_all(&temp_dir).expect("Failed to create temp dir");
+
+        let result = generate_nft_marker(
+            &pixels,
+            width,
+            height,
+            3,
+            &temp_dir,
+            "pinball_test",
+            220.0,
+            None,
+        );
+
+        assert!(result.is_ok(), "generate_nft_marker failed: {:?}", result.err());
+
+        // Verify output files exist and are not empty
+        let iset = temp_dir.join("pinball_test.iset");
+        let fset = temp_dir.join("pinball_test.fset");
+        let fset3 = temp_dir.join("pinball_test.fset3");
+
+        assert!(iset.exists(), "iset file was not generated");
+        assert!(fset.exists(), "fset file was not generated");
+        assert!(fset3.exists(), "fset3 file was not generated");
+
+        assert!(std::fs::metadata(&iset).unwrap().len() > 0, "iset file is empty");
+        assert!(std::fs::metadata(&fset).unwrap().len() > 0, "fset file is empty");
+        assert!(std::fs::metadata(&fset3).unwrap().len() > 0, "fset3 file is empty");
+
+        let _ = std::fs::remove_dir_all(&temp_dir);
+    }
+}
+

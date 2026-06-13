@@ -21,7 +21,7 @@ eframe = "0.34.1"
 egui_extras = {version = "0.34.1" , features = ["default", "all_loaders"]}
 image = { version = "0.25", features = ["jpeg", "png"] }
 rfd = "0.15"
-webarkitlib-rs = { version = "0.3.7", default-features = false }
+webarkitlib-rs = { version = "0.7.0", default-features = false }
 
 [features]
 default = []
